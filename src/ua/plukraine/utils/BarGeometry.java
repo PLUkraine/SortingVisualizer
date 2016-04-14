@@ -1,5 +1,7 @@
 package ua.plukraine.utils;
 
+import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
 
@@ -22,5 +24,24 @@ public class BarGeometry {
 			bars[i] = new Rectangle2D.Double(x_left, padding, b_width, b_heigth);
 		}
 		return bars;
+	}
+	public static Path2D generateTriangle(Cell[] arrState, double w_width, double padding, double gap, int ind) {
+		Path2D triangle = new Path2D.Double();
+		
+		double b_width = getBarWidth(w_width, padding, gap, arrState.length);
+		double h = padding / 3;
+		double a = h / Math.sin(Math.PI / 3);
+		
+		Point2D bottom = new Point2D.Double(padding + (b_width+gap)*ind + b_width/2, 2*padding/3);
+		Point2D v = new Point2D.Double(Math.cos(-Math.PI / 3), Math.sin(-Math.PI / 3));
+		//Point2D right = new Point2D.Double(bottom.getX() + a/2, padding/3);
+		Point2D right = new Point2D.Double(bottom.getX() + a * v.getX(), bottom.getY() + a * v.getY());
+		Point2D left = new Point2D.Double(right.getX() - a, right.getY());
+		
+		triangle.moveTo(bottom.getX(), bottom.getY());
+		triangle.lineTo(right.getX(), right.getY());
+		triangle.lineTo(left.getX(), left.getY());
+		
+		return triangle;
 	}
 }

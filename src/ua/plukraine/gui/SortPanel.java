@@ -24,6 +24,13 @@ public class SortPanel extends JPanel {
 		bars = null;
 	}
 	/**
+	 * Check if panel finished sorting
+	 * @return true if algorithm stopped else false
+	 */
+	public boolean hasFinished() {
+		return algorithm.hasFinished();
+	}
+	/**
 	 * Reinitialize panel with new array
 	 * @param arr - new array (must contain positive values)
 	 */
@@ -40,19 +47,18 @@ public class SortPanel extends JPanel {
 		repaint();
 	}
 	/**
+	 * Check if animation is currently present
+	 * @return true if 
+	 */
+	public boolean hasAnimation() {
+		
+		return !anime.isEmpty();
+	}
+	/**
 	 * Advance animation or do one step of the algorithm.
 	 * Create animation if needed
 	 */
 	public void update() {
-		// update animation, if it exists and hasn't finished
-		while (!anime.isEmpty() && anime.getFirst().anime.hasFinished()) {
-			anime.removeFirst();
-		}
-		if (!anime.isEmpty()) {
-			updateFromAnimation();
-			return;
-		}
-		
 		// otherwise, get next step from algorithm
 		arrState = algorithm.nextState();
 		//bars = BarGeometry.generateBars(arrState, getSize().getWidth(), getSize().getHeight(), padding, gap);
@@ -89,8 +95,12 @@ public class SortPanel extends JPanel {
 		
 		for (int i=0; i<n; ++i) {
 			if (arrState[i].state == CellState.Swapped) {
+				g2.fill(BarGeometry.generateTriangle(arrState, getSize().getWidth(), padding, gap, i));
 				g2.draw(bars[i]);
 			} else {
+				if (arrState[i].state == CellState.Active) {
+					g2.fill(BarGeometry.generateTriangle(arrState, getSize().getWidth(), padding, gap, i));
+				}
 				g2.fill(bars[i]);
 			}
 		}
@@ -98,14 +108,24 @@ public class SortPanel extends JPanel {
 	}
 	/**
 	 * Update bars position using animation
+	 * @return true if animations were updated and false if no animation existed
 	 */
-	protected void updateFromAnimation() {
+	public boolean updateAnimation() {
+		while (!anime.isEmpty() && anime.getFirst().anime.hasFinished()) {
+			anime.removeFirst();
+		}
+		if (!hasAnimation()) {
+			return false;
+		}
+		
 		for (IndexAnime a : anime) {
 			a.anime.update();
 			Point2D left_top = a.anime.getCurrentPoint();
 			bars[a.ind].setRect(left_top.getX(), left_top.getY(),
 					bars[a.ind].getWidth(), bars[a.ind].getHeight());
 		}
+		
+		return true;
 	}
 	
 	/* VARS */
@@ -117,7 +137,7 @@ public class SortPanel extends JPanel {
 	/* Constants */
 	protected double padding = 20;
 	protected double gap = 3;
-	protected int animation_duration = 5;
+	protected int animation_duration = 60;
 	
 	class IndexAnime {
 		public IndexAnime(int i, TransitionAnimation a) {
