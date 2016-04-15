@@ -1,7 +1,11 @@
 package ua.plukraine.gui;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -18,6 +22,12 @@ public class SortPanel extends JPanel {
 	 * @param algorithm - Sorting algorithm that is being shown
 	 */
 	public SortPanel(ISortingAlgortihm algorithm) {
+		this.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent e) {
+				super.componentResized(e);
+			}
+		});
 		this.algorithm = algorithm;
 		arrState = null;
 		anime = new LinkedList<IndexAnime>();
@@ -71,12 +81,15 @@ public class SortPanel extends JPanel {
 					swapped.add(i);
 				}
 			}
+			int max_val = Arrays.stream(arrState).max(new CellComparator()).get().val;
 			int i0 = swapped.get(0);
 			int i1 = swapped.get(1);
 			Point2D p0 = new Point2D.Double(bars[i0].getX(), bars[i0].getY());
 			Point2D p1 = new Point2D.Double(bars[i1].getX(), bars[i1].getY());
-			anime.add(new IndexAnime(i1, new TransitionAnimation(p0, p1, animation_duration)));
-			anime.add(new IndexAnime(i0, new TransitionAnimation(p1, p0, animation_duration)));
+			Point2D f0 = new Point2D.Double(bars[i1].getX(), bars[i0].getY());
+			Point2D f1 = new Point2D.Double(bars[i0].getX(), bars[i1].getY());
+			anime.add(new IndexAnime(i1, new TransitionAnimation(p0, f0, animation_duration)));
+			anime.add(new IndexAnime(i0, new TransitionAnimation(p1, f1, animation_duration)));
 			// swap bars
 			Rectangle2D t = bars[i0];
 			bars[i0] = bars[i1];
@@ -95,14 +108,18 @@ public class SortPanel extends JPanel {
 		
 		for (int i=0; i<n; ++i) {
 			if (arrState[i].state == CellState.Swapped) {
-				g2.fill(BarGeometry.generateTriangle(arrState, getSize().getWidth(), padding, gap, i));
-				g2.draw(bars[i]);
+				g2.setColor(Color.darkGray);
+				g2.fill(BarGeometry.generateTriangle(arrState, getSize().getWidth(), getSize().getHeight(), padding, gap, i));
+				g2.setColor(Color.gray);
+				g2.fill(bars[i]);
 			} else {
+				g2.setColor(Color.darkGray);
 				if (arrState[i].state == CellState.Active) {
-					g2.fill(BarGeometry.generateTriangle(arrState, getSize().getWidth(), padding, gap, i));
+					g2.fill(BarGeometry.generateTriangle(arrState, getSize().getWidth(), getSize().getHeight(), padding, gap, i));
 				}
 				g2.fill(bars[i]);
 			}
+			
 		}
 		
 	}
