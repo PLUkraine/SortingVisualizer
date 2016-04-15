@@ -2,6 +2,7 @@ package ua.plukraine.gui;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.ComponentAdapter;
@@ -26,12 +27,33 @@ public class SortPanel extends JPanel {
 			@Override
 			public void componentResized(ComponentEvent e) {
 				super.componentResized(e);
+				
+				if (bars != null) {
+					// TODO implement animation redraw
+					bars = BarGeometry.generateBars(arrState, getSize().getWidth(), getSize().getHeight(), padding, gap);
+					
+					double b_width = BarGeometry.getBarWidth(getSize().getWidth(), padding, gap, arrState.length);
+					double h_mult = BarGeometry.getHeightMultiplier(arrState, getSize().getHeight(), padding);
+					
+					for (IndexAnime a : anime) {
+						a.anime.resetTransition(
+								BarGeometry.resizePoint(oldSize, getSize(), a.anime.initPos(), padding), 
+								BarGeometry.resizePoint(oldSize, getSize(), a.anime.finalPos(), padding));
+						Point2D left_top = a.anime.getCurrentPoint();
+						bars[a.ind] = new Rectangle2D.Double(left_top.getX(), left_top.getY(),
+								b_width, arrState[a.ind].val*h_mult);
+					}
+					
+					repaint();
+				}
+				oldSize = getSize();
 			}
 		});
 		this.algorithm = algorithm;
 		arrState = null;
 		anime = new LinkedList<IndexAnime>();
 		bars = null;
+		oldSize = getSize();
 	}
 	/**
 	 * Check if panel finished sorting
@@ -150,6 +172,7 @@ public class SortPanel extends JPanel {
 	protected Cell[] arrState;
 	protected Rectangle2D[] bars;
 	protected LinkedList<IndexAnime> anime;
+	protected Dimension oldSize;
 	
 	/* Constants */
 	protected double padding = 20;

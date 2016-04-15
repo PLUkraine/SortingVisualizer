@@ -1,5 +1,6 @@
 package ua.plukraine.utils;
 
+import java.awt.Dimension;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -27,6 +28,16 @@ public class BarGeometry {
 		}
 		return bars;
 	}
+	/**
+	 * Create little triangle below bar
+	 * @param arrState - current array state
+	 * @param w_width - width of the component
+	 * @param w_height - height of the component
+	 * @param padding - space between border and image
+	 * @param gap - gap between bars
+	 * @param ind - index of bar
+	 * @return triangle below bar
+	 */
 	public static Path2D generateTriangle(Cell[] arrState, double w_width, double w_height, double padding, double gap, int ind) {
 		Path2D triangle = new Path2D.Double();
 		
@@ -45,5 +56,21 @@ public class BarGeometry {
 		triangle.lineTo(left.getX(), left.getY());
 		
 		return triangle;
+	}
+	public static Point2D resizePoint(Dimension old, Dimension now, Point2D p, double padding) {
+		/*
+		 * 3 Steps: 
+		 * 1) Translate p to rectangle without padding (by removing padding from coordinates
+		 * and 2*padding from containers sizes
+		 * 2) Using fact that ratio of x coord to width doesn't change, compute new x.
+		 * Formula: newx / new_width = oldx / old_width => newx = new_width * oldx / old_width
+		 * 2') Same for new y
+		 * 3) Translate coordinates to container with padding (add padding to both coordinates)
+		 */
+		Point2D newP = new Point2D.Double(
+					(p.getX() - padding) * (now.getWidth() - 2*padding) / (old.getWidth() - 2*padding) + padding,
+					(p.getY() - padding) * (now.getHeight() - 2*padding) / (old.getHeight() - 2*padding) + padding
+				);
+		return newP;
 	}
 }

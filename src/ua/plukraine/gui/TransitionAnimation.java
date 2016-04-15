@@ -6,6 +6,32 @@ public class TransitionAnimation {
 	public TransitionAnimation(Point2D initPos, Point2D finalPos, int duration) {
 		curFrame = 0;
 		this.duration = duration;
+		_init = initPos;
+		_final = finalPos;
+		x_func = (frame) -> {
+			return initPos.getX() + (finalPos.getX() - initPos.getX()) * frame / duration; 
+		};
+		y_func = (frame) -> {
+			return initPos.getY() + (finalPos.getY() - initPos.getY()) * frame / duration;
+		};
+	}
+	
+	public Point2D initPos() {
+		return _init;
+	}
+	
+	public Point2D finalPos() {
+		return _final;
+	}
+	
+	/**
+	 * Change transition coordinates without changing current frame
+	 * @param initPos - new initial position
+	 * @param finalPos - new final position
+	 */
+	public void resetTransition(Point2D initPos, Point2D finalPos) {
+		_init = initPos;
+		_final = finalPos;
 		x_func = (frame) -> {
 			return initPos.getX() + (finalPos.getX() - initPos.getX()) * frame / duration; 
 		};
@@ -31,6 +57,8 @@ public class TransitionAnimation {
 	protected TransFunc y_func;
 	protected int curFrame;
 	protected int duration;
+	protected Point2D _init;
+	protected Point2D _final;
 	
 	@FunctionalInterface
 	protected interface TransFunc {
