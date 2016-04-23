@@ -23,4 +23,8 @@ public interface ISortingAlgortihm {
 	 * @return true if array is sorted, false otherwise
 	 */
 	boolean hasFinished();
+	/**
+	 * Get name of algorithm
+	 */
+	String getName();
 }

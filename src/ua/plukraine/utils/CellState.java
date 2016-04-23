@@ -6,7 +6,7 @@ package ua.plukraine.utils;
 public enum CellState {
 	/**
 	 * Just swapped places with other cell
-	 * Only two cells in one array should be labeled as Swapped
+	 * Only two or no cells in one array should be labeled as Swapped
 	 */
 	Swapped,
 	/**
@@ -14,7 +14,15 @@ public enum CellState {
 	 */
 	Idle,
 	/**
-	 * Cell is active(current etc
+	 * Cell is active(current etc)
 	 */
-	Active
+	Active,
+	/**
+	 * Cell is in it's position
+	 */
+	Sorted,
+	/**
+	 * Cell is out of algorithm's scope (for example, out of invariant that is being sorted)
+	 */
+	Out
 }
