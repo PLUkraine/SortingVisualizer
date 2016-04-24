@@ -1,6 +1,7 @@
 package ua.plukraine;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 
@@ -20,6 +21,9 @@ import java.awt.Insets;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,9 +34,13 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JSeparator;
+import javax.swing.JCheckBoxMenuItem;
 
 
 public class MainFrame {
+	private enum MouseState {
+		Normal, DeletePanel
+	}
 	private class PanelWithPosition {
 		public int r, c;
 		public SortPanel p;
@@ -54,11 +62,15 @@ public class MainFrame {
 	
 	/** Check if next button press must start sorting */
 	private boolean btn_must_start = true;
+	private MouseState mouseState = MouseState.Normal;
+	private JPanel sortPanelsCont;
 	private JMenuBar menuBar;
 	private JMenu algoMenu;
 	private JMenuItem addPanelMenu;
 	private JSeparator separPanelAndLoad;
 	private JMenuItem loadAlgosMenu;
+	private JMenuItem resetArrMenu;
+	private JCheckBoxMenuItem toggleRemovePanelMenu;
 
 	/**
 	 * Launch the application.
@@ -100,9 +112,16 @@ public class MainFrame {
 		frame = new JFrame();
 		frame.setBounds(100, 100, 450, 300);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent e) {
+				super.componentResized(e);
+				onResize();
+			}
+		});
 		
 		// Create center panel with sorting panels
-		JPanel sortPanelsCont = new JPanel();
+		sortPanelsCont = new JPanel();
 		frame.getContentPane().add(sortPanelsCont, BorderLayout.CENTER);
 		sortPanelsCont.setLayout(new GridBagLayout());
 		
@@ -137,33 +156,20 @@ public class MainFrame {
 		});
 		algoMenu.add(addPanelMenu);
 		
+		toggleRemovePanelMenu = new JCheckBoxMenuItem("Delete panel on click");
+		toggleRemovePanelMenu.addActionListener((e) -> {
+			onToggleRemoveMenu();
+		});
+		algoMenu.add(toggleRemovePanelMenu);
+		
+		resetArrMenu = new JMenuItem("Reset array...");
+		algoMenu.add(resetArrMenu);
+		
 		separPanelAndLoad = new JSeparator();
 		algoMenu.add(separPanelAndLoad);
 		
 		loadAlgosMenu = new JMenuItem("Load algorithms...");
 		algoMenu.add(loadAlgosMenu);
-		
-		
-//		GridBagConstraints c = new GridBagConstraints();
-//		c.fill = GridBagConstraints.BOTH;
-//		c.weightx = c.weighty = 1.0;
-		//c.insets = new Insets(3,3,3,3);
-		
-//		frame.getContentPane().add(sort_panels[0], c);
-//		c.gridx = 1;
-//		frame.getContentPane().add(sort_panels[1], c);
-////		c.gridx = 0; c.gridy = 1;
-////		frame.getContentPane().add(sort_panels[2], c);
-//		
-//		c.gridx = 0; c.gridy = 1;
-//		c.weighty = 0; c.fill = GridBagConstraints.HORIZONTAL;
-//		c.gridwidth = GridBagConstraints.REMAINDER;
-//		frame.getContentPane().add(slider, c);
-//		
-//		c.gridx = 0; c.gridy = 2;
-//		c.weighty = 0; c.fill = GridBagConstraints.HORIZONTAL;
-//		c.gridwidth = GridBagConstraints.REMAINDER;
-//		frame.getContentPane().add(start_stop_btn, c);
 	}
 
 	/**
@@ -196,7 +202,47 @@ public class MainFrame {
 			return;
 		}
 		
-		//sort_panels.add(new SortPanel(new InsertionSorting()));
+		int sqRoot = (int)Math.sqrt(MAX_PANELS);
+		int col = (sort_panels.size()) / sqRoot;
+		int row = (sort_panels.size()) % sqRoot;
+		SortPanel panel = new SortPanel(new InsertionSorting());
+		
+		PanelWithPosition pwp = new PanelWithPosition(row, col, panel);
+		panel.addMouseListener(new MouseAdapter() {			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				super.mouseClicked(e);
+				onSortPanelMouseClick(e.getComponent());
+			}
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				super.mouseEntered(e);
+				if (mouseState == MouseState.DeletePanel && e.getComponent() instanceof SortPanel) {
+					SortPanel p = (SortPanel)e.getComponent();
+					p.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+				}
+			}
+			@Override
+			public void mouseExited(MouseEvent e) {
+				super.mouseExited(e);
+				if (mouseState == MouseState.DeletePanel && e.getComponent() instanceof SortPanel) {
+					SortPanel p = (SortPanel)e.getComponent();
+					p.setBorder(BorderFactory.createEmptyBorder());
+				}
+			}
+		});
+		
+		GridBagConstraints c = new GridBagConstraints();
+		c.weightx = c.weighty = 1.0;
+		c.fill = GridBagConstraints.BOTH;
+		c.gridx = row; c.gridy = col;
+		c.insets = new Insets(2, 2, 2, 2);
+		sortPanelsCont.add(panel, c);
+		
+		sort_panels.add(pwp);
+		
+		panel.feedArray(new int[]{14, 13, 14, 21, 6, 10, 49, 35, 4, 47, 13, 45, 33, 23, 5, 18, 15, 6, 43, 27, 7, 4, 2, 27, 38, 30, 38, 18, 34, 17, 17, 28, 3, 46, 7, 15, 9, 27, 47, 12, 20, 30, 38, 33, 35, 37, 35, 20, 44, 11});
+		frame.getContentPane().validate();
 		JOptionPane.showMessageDialog(frame, "Added panel");
 	}
 	
@@ -206,7 +252,7 @@ public class MainFrame {
 	protected void onChangeUpdateFrequency() {
 		tactTimer.stop();
 		
-		int newval = (slider.getValue() - 3*slider.getValue()/8) / SortPanel.timer_tick;
+		int newval = (int)(slider.getValue() * (1 - 2./3) / SortPanel.timer_tick);
 		tactTimer.setDelay(slider.getValue());
 		for (PanelWithPosition p : sort_panels) {
 			p.p.setAnimationFramesDuration(newval);
@@ -237,6 +283,51 @@ public class MainFrame {
 		}
 		if (allFinished) {
 			tactTimer.stop();
+		}
+	}
+	
+	/**
+	 * Process click on sort panel
+	 * @param sender - event source
+	 */
+	protected void onSortPanelMouseClick(Component sender) {
+		if (mouseState == MouseState.DeletePanel) {
+			removePanel(sender);
+		}
+	}
+	
+	protected void onResize() {
+		frame.getContentPane().invalidate();
+	}
+	
+	protected void onToggleRemoveMenu() {
+		if (mouseState != MouseState.DeletePanel) {
+			mouseState = MouseState.DeletePanel;
+		} else {
+			mouseState = MouseState.Normal;
+		}
+	}
+	
+	protected void removePanel(Component panelToRemove) {
+		if (panelToRemove instanceof SortPanel) {
+			sort_panels.removeIf((p) -> p.p.equals(panelToRemove));
+			int sq = (int)Math.sqrt(MAX_PANELS);
+			for (int i=0; i<sort_panels.size(); ++i) {
+				PanelWithPosition p = sort_panels.get(i);
+				p.r = i%sq;
+				p.c = i/sq;
+			}
+			sortPanelsCont.removeAll();
+			for (PanelWithPosition p : sort_panels) {
+				GridBagConstraints c = new GridBagConstraints();
+				c.weightx = c.weighty = 1.0;
+				c.fill = GridBagConstraints.BOTH;
+				c.gridx = p.r; c.gridy = p.c;
+				c.insets = new Insets(2, 2, 2, 2);
+				sortPanelsCont.add(p.p, c);
+			}
+			frame.getContentPane().revalidate();
+			frame.repaint();
 		}
 	}
 }
