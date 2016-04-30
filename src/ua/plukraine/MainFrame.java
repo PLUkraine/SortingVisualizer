@@ -7,11 +7,15 @@ import java.awt.GridBagConstraints;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.Timer;
+
+import ua.plukraine.algos.AlgoClassLoader;
+import ua.plukraine.algos.ISortingAlgortihm;
 import ua.plukraine.algos.InsertionSorting;
 import ua.plukraine.algos.QuickSortRandomPivot;
 import ua.plukraine.gui.SortPanel;
@@ -24,12 +28,21 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.IntStream;
 import java.awt.event.ActionEvent;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -38,9 +51,15 @@ import javax.swing.JCheckBoxMenuItem;
 
 
 public class MainFrame {
+	/**
+	 * State for mouse event
+	 */
 	private enum MouseState {
 		Normal, DeletePanel
 	}
+	/**
+	 * Sort panel with it's position in grid
+	 */
 	private class PanelWithPosition {
 		public int r, c;
 		public SortPanel p;
@@ -50,15 +69,20 @@ public class MainFrame {
 		}
 	}
 
+	private JFileChooser fileChooser;
 	private JFrame frame;
 	private List<PanelWithPosition> sort_panels = new ArrayList<>(MAX_PANELS);
 	private JSlider slider;
 	private JButton start_stop_btn;
 	private Timer tactTimer;
+	/** Array for sorting */
+	private int[] cur_array = new int[] {13, 2, 16, 6, 7, 14, 3, 17, 20, 18, 2, 13, 6, 7, 3, 4, 6, 10, 20, 4};
+	private Set<Class> algo_list = new HashSet<Class>();
 	
 	/** Initial timer tick period */
 	private static final int LONG_DELAY = 500;
 	private static final int MAX_PANELS = 4;
+	private static final int MAX_ARR_LEN = 100;
 	
 	/** Check if next button press must start sorting */
 	private boolean btn_must_start = true;
@@ -80,13 +104,9 @@ public class MainFrame {
 			public void run() {
 				try {
 					MainFrame window = new MainFrame();
+					window.frame.setTitle("Sorting Visualizer");
 					window.frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 					window.frame.setVisible(true);
-//					for (SortPanel panel : window.sort_panels) {
-//						//panel.feedArray(new int[]{ 4, 3, 2, 8, 8, 3, 2, 6 });
-//						//panel.feedArray(new int[] {20,14, 9, 16, 8, 10, 17, 14, 10, 9, 19, 14, 3, 19, 18, 17, 19, 14, 7, 8, 10});
-//						panel.feedArray(new int[]{14, 13, 14, 21, 6, 10, 49, 35, 4, 47, 13, 45, 33, 23, 5, 18, 15, 6, 43, 27, 7, 4, 2, 27, 38, 30, 38, 18, 34, 17, 17, 28, 3, 46, 7, 15, 9, 27, 47, 12, 20, 30, 38, 33, 35, 37, 35, 20, 44, 11});
-//					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -105,6 +125,13 @@ public class MainFrame {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
+		// TODO remove
+		algo_list.add(InsertionSorting.class);
+		algo_list.add(QuickSortRandomPivot.class);
+		
+		fileChooser = new JFileChooser();
+		fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		
 		tactTimer = new Timer(LONG_DELAY, (e) -> {
 			updateSortingPanels();
 		});
@@ -163,12 +190,18 @@ public class MainFrame {
 		algoMenu.add(toggleRemovePanelMenu);
 		
 		resetArrMenu = new JMenuItem("Reset array...");
+		resetArrMenu.addActionListener((e) -> {
+			resetArray();
+		});
 		algoMenu.add(resetArrMenu);
 		
 		separPanelAndLoad = new JSeparator();
 		algoMenu.add(separPanelAndLoad);
 		
 		loadAlgosMenu = new JMenuItem("Load algorithms...");
+		loadAlgosMenu.addActionListener((e) -> {
+			loadClasses();
+		});
 		algoMenu.add(loadAlgosMenu);
 	}
 
@@ -195,42 +228,43 @@ public class MainFrame {
 	/**
 	 * Prompt user to choose algorithm and create panel to represent that algorithm
 	 */
+	@SuppressWarnings({"rawtypes"})
 	protected void onAddPanel() {
-		// TODO implement 
+		stopSorting();
 		if (sort_panels.size() >= MAX_PANELS) {
 			JOptionPane.showMessageDialog(frame, "Can't add panel, too many of them!");
 			return;
 		}
 		
+		// TODO put in separate function
+		List<ISortingAlgortihm> instances = new ArrayList<>();
+		for (Class a : algo_list) {
+			try {
+				ISortingAlgortihm algo = (ISortingAlgortihm)a.newInstance();
+				instances.add(algo);
+			} catch ( IllegalAccessException 
+					| InstantiationException ex) {
+				ex.printStackTrace();
+				System.exit(1);
+			}
+		}
+		Object[] choises = IntStream.range(0, instances.size())
+			.mapToObj((i) -> i + ". " + instances.get(i).getName()).toArray();
+		String o = JOptionPane.showInputDialog(frame, "Choose algorithm", "Algorithm required", JOptionPane.QUESTION_MESSAGE,
+				null, choises, choises[0]).toString();
+		if (o == null) {
+			return;
+		}
+		ISortingAlgortihm chosen = instances.get(Integer.parseInt(o.substring(0, o.indexOf('.'))));
+		
+		
 		int sqRoot = (int)Math.sqrt(MAX_PANELS);
 		int col = (sort_panels.size()) / sqRoot;
 		int row = (sort_panels.size()) % sqRoot;
-		SortPanel panel = new SortPanel(new InsertionSorting());
+		SortPanel panel = new SortPanel(chosen);
 		
 		PanelWithPosition pwp = new PanelWithPosition(row, col, panel);
-		panel.addMouseListener(new MouseAdapter() {			
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				super.mouseClicked(e);
-				onSortPanelMouseClick(e.getComponent());
-			}
-			@Override
-			public void mouseEntered(MouseEvent e) {
-				super.mouseEntered(e);
-				if (mouseState == MouseState.DeletePanel && e.getComponent() instanceof SortPanel) {
-					SortPanel p = (SortPanel)e.getComponent();
-					p.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
-				}
-			}
-			@Override
-			public void mouseExited(MouseEvent e) {
-				super.mouseExited(e);
-				if (mouseState == MouseState.DeletePanel && e.getComponent() instanceof SortPanel) {
-					SortPanel p = (SortPanel)e.getComponent();
-					p.setBorder(BorderFactory.createEmptyBorder());
-				}
-			}
-		});
+		panel.addMouseListener(new SortPanelMouseHandler());
 		
 		GridBagConstraints c = new GridBagConstraints();
 		c.weightx = c.weighty = 1.0;
@@ -241,9 +275,39 @@ public class MainFrame {
 		
 		sort_panels.add(pwp);
 		
-		panel.feedArray(new int[]{14, 13, 14, 21, 6, 10, 49, 35, 4, 47, 13, 45, 33, 23, 5, 18, 15, 6, 43, 27, 7, 4, 2, 27, 38, 30, 38, 18, 34, 17, 17, 28, 3, 46, 7, 15, 9, 27, 47, 12, 20, 30, 38, 33, 35, 37, 35, 20, 44, 11});
+		panel.feedArray(cur_array);
 		frame.getContentPane().validate();
-		JOptionPane.showMessageDialog(frame, "Added panel");
+		
+		resetPanels();
+	}
+	
+	/**
+	 * Sort panel mouse event handler
+	 */
+	protected class SortPanelMouseHandler extends MouseAdapter{			
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			super.mouseClicked(e);
+			if (mouseState == MouseState.DeletePanel) {
+				removePanel(e.getComponent());
+			}
+		}
+		@Override
+		public void mouseEntered(MouseEvent e) {
+			super.mouseEntered(e);
+			if (mouseState == MouseState.DeletePanel && e.getComponent() instanceof SortPanel) {
+				SortPanel p = (SortPanel)e.getComponent();
+				p.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+			}
+		}
+		@Override
+		public void mouseExited(MouseEvent e) {
+			super.mouseExited(e);
+			if (mouseState == MouseState.DeletePanel && e.getComponent() instanceof SortPanel) {
+				SortPanel p = (SortPanel)e.getComponent();
+				p.setBorder(BorderFactory.createEmptyBorder());
+			}
+		}
 	}
 	
 	/**
@@ -252,7 +316,7 @@ public class MainFrame {
 	protected void onChangeUpdateFrequency() {
 		tactTimer.stop();
 		
-		int newval = (int)(slider.getValue() * (1 - 2./3) / SortPanel.timer_tick);
+		int newval = (int)(slider.getValue() * (1 - 3./4) / SortPanel.timer_tick);
 		tactTimer.setDelay(slider.getValue());
 		for (PanelWithPosition p : sort_panels) {
 			p.p.setAnimationFramesDuration(newval);
@@ -287,19 +351,15 @@ public class MainFrame {
 	}
 	
 	/**
-	 * Process click on sort panel
-	 * @param sender - event source
+	 * Repaint correctly on resize event
 	 */
-	protected void onSortPanelMouseClick(Component sender) {
-		if (mouseState == MouseState.DeletePanel) {
-			removePanel(sender);
-		}
-	}
-	
 	protected void onResize() {
 		frame.getContentPane().invalidate();
 	}
 	
+	/**
+	 * Toggle delete panel state
+	 */
 	protected void onToggleRemoveMenu() {
 		if (mouseState != MouseState.DeletePanel) {
 			mouseState = MouseState.DeletePanel;
@@ -308,7 +368,12 @@ public class MainFrame {
 		}
 	}
 	
+	/**
+	 * Remove given sort panel and move all remaining components
+	 * @param panelToRemove - panel to remove
+	 */
 	protected void removePanel(Component panelToRemove) {
+		stopSorting();
 		if (panelToRemove instanceof SortPanel) {
 			sort_panels.removeIf((p) -> p.p.equals(panelToRemove));
 			int sq = (int)Math.sqrt(MAX_PANELS);
@@ -328,6 +393,90 @@ public class MainFrame {
 			}
 			frame.getContentPane().revalidate();
 			frame.repaint();
+		}
+	}
+	
+	/**
+	 * Change array for sorting
+	 */
+	protected void resetArray() {
+		String str_arr = (String)JOptionPane.showInputDialog(
+                frame,
+                "Enter array of positive ints",
+                "Enter array",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                null,
+                "1,2,3");
+		if (str_arr == null) {
+			return;
+		}
+		String[] tokens = str_arr.split(",");
+		
+		if (tokens.length == 0) {
+			String mes = "Array is empty";
+			JOptionPane.showMessageDialog(frame, mes);
+			return;
+		}
+		
+		if (tokens.length > MAX_ARR_LEN) {
+			String mes = String.format("Array must be less than %d elements long", MAX_ARR_LEN);
+			JOptionPane.showMessageDialog(frame, mes);
+			return;
+		}
+		
+		int[] arr = new int[tokens.length];
+		for (int i=0; i<tokens.length; ++i) {
+			try {
+				arr[i] = Integer.parseUnsignedInt(tokens[i].trim());
+				if (arr[i] == 0)
+					throw new NumberFormatException("Number isn't positive");
+			} catch (NumberFormatException ex) {
+				String mes = String.format("Element #%d, \"%s\" namely, isn't positive integer", i+1, tokens[i]);
+				JOptionPane.showMessageDialog(frame, mes);
+				return;
+			}
+		}
+		
+		cur_array = arr;
+		resetPanels();
+	}
+	
+	/**
+	 * Reset sort panels to initial state
+	 */
+	protected void resetPanels() {
+		for (PanelWithPosition p : sort_panels) {
+			p.p.feedArray(cur_array);
+		}
+	}
+	
+	/**
+	 * Show dialog and load classes from chosen folder
+	 */
+	protected void loadClasses() {
+		int dialogRes = fileChooser.showOpenDialog(frame);
+		if (dialogRes == JFileChooser.APPROVE_OPTION) {
+			try {
+				File folder = fileChooser.getSelectedFile();
+				List<Class> classes = new AlgoClassLoader().loadFromFolder(folder);
+				String mes = "Not loaded";
+				// form list of loaded classes
+				if (!classes.isEmpty()) {
+					StringBuilder listOfClasses = new StringBuilder();
+					for (Class c : classes) {
+						listOfClasses.append(c.getName());
+						listOfClasses.append(", ");
+					}
+					mes = "Loaded " + listOfClasses.substring(0, listOfClasses.length()-2);
+				}
+				// show if loaded something
+				JOptionPane.showMessageDialog(frame, mes);
+				
+				algo_list.addAll(classes);
+			} catch (IOException ex) {
+				JOptionPane.showMessageDialog(frame, ex.getMessage());
+			}
 		}
 	}
 }

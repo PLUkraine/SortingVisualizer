@@ -2,6 +2,9 @@ package ua.plukraine.utils;
 
 import java.util.Comparator;
 
+/**
+ * Comparator for cells. One cell is bigger than other if it's value is bigger
+ */
 public class CellComparator implements Comparator<Cell> {
 
 	@Override

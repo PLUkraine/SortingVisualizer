@@ -14,11 +14,11 @@ public enum CellState {
 	 */
 	Idle,
 	/**
-	 * Cell is active(current etc)
+	 * Cell is active(current, pivot etc)
 	 */
 	Active,
 	/**
-	 * Cell is in it's position
+	 * Cell is on it's position
 	 */
 	Sorted,
 	/**

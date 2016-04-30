@@ -7,13 +7,37 @@ import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
 
 public class BarGeometry {
+	/**
+	 * Get width of one bar
+	 * @param w_width - width of the window
+	 * @param padding - space between bar and window's border
+	 * @param gap - gap between bars
+	 * @param n_arr - length of array
+	 * @return width of one bar
+	 */
 	public static double getBarWidth(double w_width, double padding, double gap, double n_arr) {
 		return (w_width - (n_arr - 1)*gap - 2 * padding) / n_arr;
 	}
+	/**
+	 * Get height multiplier for height computation. Returned value times max value in array == height of window.
+	 * @param arr - input array
+	 * @param w_height - height of the window
+	 * @param padding - space between bar and window's border
+	 * @return height multiplier
+	 */
 	public static double getHeightMultiplier(Cell[] arr, double w_height, double padding) {
 		int max_val = Arrays.stream(arr).max(new CellComparator()).get().val;
 		return (w_height - 2 * padding) / max_val;
 	}
+	/**
+	 * Get array of bars for given array
+	 * @param arrState - input array
+	 * @param w_width - width of the window
+	 * @param w_height - height of the window
+	 * @param padding - space between bar and window's border
+	 * @param gap - gap between bars
+	 * @return array of generated bars
+	 */
 	public static Rectangle2D[] generateBars(Cell[] arrState, double w_width, double w_height, double padding, double gap) {
 		int n = arrState.length;
 		int max_val = Arrays.stream(arrState).max(new CellComparator()).get().val;
@@ -57,6 +81,14 @@ public class BarGeometry {
 		
 		return triangle;
 	}
+	/**
+	 * Translate point from old window to new, with padding in mind
+	 * @param old - old window
+	 * @param now - new window
+	 * @param p - point to translate
+	 * @param padding - space between border and real inner space
+	 * @return translated point
+	 */
 	public static Point2D resizePoint(Dimension old, Dimension now, Point2D p, double padding) {
 		/*
 		 * 3 Steps: 
