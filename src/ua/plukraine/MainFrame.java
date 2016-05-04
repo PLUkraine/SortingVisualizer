@@ -7,17 +7,13 @@ import java.awt.GridBagConstraints;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.Timer;
 
-import ua.plukraine.algos.AlgorithmClassLoader;
 import ua.plukraine.algos.ISortingAlgortihm;
-import ua.plukraine.algos.InsertionSorting;
-import ua.plukraine.algos.QuickSortRandomPivot;
 import ua.plukraine.gui.SortPanel;
 import ua.plukraine.utils.UserDialogHelper;
 
@@ -27,13 +23,8 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.IntStream;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 
@@ -42,6 +33,8 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JSeparator;
 import javax.swing.JCheckBoxMenuItem;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 
 public class MainFrame {
@@ -65,6 +58,7 @@ public class MainFrame {
 	private static final int LONG_DELAY = 500;
 	private static final int MAX_PANELS = 4;
 	private static final int MAX_ARR_LEN = 100;
+	private static final double anime_ratio = 1./2;
 	
 	/** Check if next button press must start sorting */
 	private boolean btn_must_start = true;
@@ -78,6 +72,8 @@ public class MainFrame {
 	private JMenuItem resetArrMenu;
 	private JCheckBoxMenuItem toggleRemovePanelMenu;
 	private JMenuItem resetPanelMenu;
+	private JButton btnStep;
+	private JButton btnReset;
 
 	/**
 	 * Launch the application.
@@ -131,7 +127,7 @@ public class MainFrame {
 		// Create lower panel with slider and button
 		JPanel utilsPanel = new JPanel();
 		frame.getContentPane().add(utilsPanel, BorderLayout.SOUTH);
-		utilsPanel.setLayout(new GridLayout(2, 0, 0, 3));
+		utilsPanel.setLayout(new GridLayout(2, 2, 0, 3));
 		
 		slider = new JSlider(275, 2000, LONG_DELAY);
 		slider.addChangeListener((e) -> {
@@ -143,7 +139,19 @@ public class MainFrame {
 		start_stop_btn.addActionListener((e) -> {
 			onStartStopToggled();
 		});
+		
+		btnStep = new JButton("Step");
+		btnStep.addActionListener((e) -> {
+			onStep();
+		});
+		utilsPanel.add(btnStep);
 		utilsPanel.add(start_stop_btn);
+		
+		btnReset = new JButton("Reset");
+		btnReset.addActionListener((e) -> {
+			resetPanels();
+		});
+		utilsPanel.add(btnReset);
 		
 		
 		// Menu bar here
@@ -220,14 +228,14 @@ public class MainFrame {
 		ISortingAlgortihm chosen = dialogHelper.pickAlgorithm(frame);
 		
 		int sqRoot = (int)Math.sqrt(MAX_PANELS);
-		SortPanel panel = new SortPanel(chosen);
+		SortPanel panel = new SortPanel(chosen, calculateAnimationDuration(slider.getValue()));
 		panel.addMouseListener(new SortPanelMouseHandler());
 		
 		GridBagConstraints c = new GridBagConstraints();
 		c.weightx = c.weighty = 1.0;
 		c.fill = GridBagConstraints.BOTH;
-		c.gridx = (sort_panels.size()) / sqRoot; 
-		c.gridy = (sort_panels.size()) % sqRoot;
+		c.gridx = (sort_panels.size()) % sqRoot; 
+		c.gridy = (sort_panels.size()) / sqRoot;
 		c.insets = new Insets(2, 2, 2, 2);
 		sortPanelsCont.add(panel, c);
 		
@@ -274,13 +282,17 @@ public class MainFrame {
 	protected void onChangeUpdateFrequency() {
 		tactTimer.stop();
 		
-		int newval = (int)(slider.getValue() * (1 - 3./4) / SortPanel.timer_tick);
+		int newval = calculateAnimationDuration(slider.getValue());
 		tactTimer.setDelay(slider.getValue());
 		for (SortPanel p : sort_panels) {
 			p.setAnimationFramesDuration(newval);
 		}
 		if (!btn_must_start)
 			tactTimer.start();
+	}
+	
+	protected int calculateAnimationDuration(int updateTime) {
+		return (int)(updateTime * anime_ratio / SortPanel.timer_tick);
 	}
 	
 	/**
@@ -367,6 +379,7 @@ public class MainFrame {
 	 * Reset sort panels to initial state
 	 */
 	protected void resetPanels() {
+		stopSorting();
 		for (SortPanel p : sort_panels) {
 			p.feedArray(cur_array);
 		}
@@ -377,5 +390,12 @@ public class MainFrame {
 	 */
 	protected void loadClasses() {
 		dialogHelper.loadAlgorithms(frame);
+	}
+	/**
+	 * Human step handler
+	 */
+	protected void onStep() {
+		stopSorting();
+		updateSortingPanels();
 	}
 }

@@ -14,6 +14,7 @@ public class TransitionAnimation {
 	
 	public TransitionAnimation(Point2D initPos, Point2D finalPos, int duration) {
 		curFrame = 0;
+		this.duration = duration;
 		x_func = (frame) -> {
 			return initPos.getX() + (finalPos.getX() - initPos.getX()) * frame / duration; 
 		};

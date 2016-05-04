@@ -40,7 +40,7 @@ public class SortPanel extends JComponent {
 	protected Rectangle2D[] bars;
 	protected LinkedList<IndexAndAnimation> animations;
 	protected Timer animationTimer;
-	protected int animationDuration = 60;
+	protected int animationDuration;
 	
 	/* Constants */
 	public static final int timer_tick = 5;
@@ -52,14 +52,16 @@ public class SortPanel extends JComponent {
 	/**
 	 * Create panel with specific algorithm
 	 * @param algorithm - Sorting algorithm that is being shown
+	 * @param FPA - frames per animation
 	 */
-	public SortPanel(ISortingAlgortihm algorithm) {
+	public SortPanel(ISortingAlgortihm algorithm, int FPA) {
 		initActions();
 		
 		this.algorithm = algorithm;
 		arrState = null;
 		animations = new LinkedList<IndexAndAnimation>();
 		bars = null;
+		animationDuration = FPA;
 	}
 	/**
 	 * Abort all animations and redraw bars 
@@ -130,6 +132,7 @@ public class SortPanel extends JComponent {
 			Point2D f1 = new Point2D.Double(bars[i0].getX(), bars[i1].getY());
 			animations.add(new IndexAndAnimation(i1, new TransitionAnimation(p0, f0, animationDuration)));
 			animations.add(new IndexAndAnimation(i0, new TransitionAnimation(p1, f1, animationDuration)));
+			
 			// swap bars
 			Rectangle2D t = bars[i0];
 			bars[i0] = bars[i1];
@@ -202,7 +205,6 @@ public class SortPanel extends JComponent {
 		if (!hasAnimation()) {
 			return false;
 		}
-		
 		for (IndexAndAnimation a : animations) {
 			a.anime.update();
 			Point2D left_top = a.anime.getCurrentPoint();
