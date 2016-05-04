@@ -1,7 +1,6 @@
 package ua.plukraine.gui;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.ActionListener;
@@ -26,8 +25,8 @@ public class SortPanel extends JComponent {
 	 * Contains animation and index of corresponding bar
 	 *
 	 */
-	protected class IndexAnime {
-		public IndexAnime(int i, TransitionAnimation a) {
+	protected class IndexAndAnimation {
+		public IndexAndAnimation(int i, TransitionAnimation a) {
 			this.ind = i;
 			this.anime = a;
 		}
@@ -39,23 +38,17 @@ public class SortPanel extends JComponent {
 	protected final ISortingAlgortihm algorithm;
 	protected Cell[] arrState;
 	protected Rectangle2D[] bars;
-	protected LinkedList<IndexAnime> animations;
-	protected Dimension oldSize;
+	protected LinkedList<IndexAndAnimation> animations;
 	protected Timer animationTimer;
+	protected int animationDuration = 60;
 	
 	/* Constants */
-	protected final double padding = 20;
-	protected final double gap = 3;
-	protected int animation_duration = 60;
 	public static final int timer_tick = 5;
+	protected static final double padding = 20;
+	protected static final double gap = 3;
 	protected static final int min_animation_duration = 10;
 	
-	public void abortAnimation() {
-		animations.clear();
-		if (bars != null) {
-			bars = BarGeometry.generateBars(arrState, getSize().getWidth(), getSize().getHeight(), padding, gap);
-		}
-	}
+	
 	/**
 	 * Create panel with specific algorithm
 	 * @param algorithm - Sorting algorithm that is being shown
@@ -65,9 +58,17 @@ public class SortPanel extends JComponent {
 		
 		this.algorithm = algorithm;
 		arrState = null;
-		animations = new LinkedList<IndexAnime>();
+		animations = new LinkedList<IndexAndAnimation>();
 		bars = null;
-		oldSize = getSize();
+	}
+	/**
+	 * Abort all animations and redraw bars 
+	 */
+	public void abortAnimation() {
+		animations.clear();
+		if (bars != null) {
+			bars = BarGeometry.generateBars(arrState, getSize().getWidth(), getSize().getHeight(), padding, gap);
+		}
 	}
 	/**
 	 * Check if panel finished sorting
@@ -127,8 +128,8 @@ public class SortPanel extends JComponent {
 			Point2D p1 = new Point2D.Double(bars[i1].getX(), bars[i1].getY());
 			Point2D f0 = new Point2D.Double(bars[i1].getX(), bars[i0].getY());
 			Point2D f1 = new Point2D.Double(bars[i0].getX(), bars[i1].getY());
-			animations.add(new IndexAnime(i1, new TransitionAnimation(p0, f0, animation_duration)));
-			animations.add(new IndexAnime(i0, new TransitionAnimation(p1, f1, animation_duration)));
+			animations.add(new IndexAndAnimation(i1, new TransitionAnimation(p0, f0, animationDuration)));
+			animations.add(new IndexAndAnimation(i0, new TransitionAnimation(p1, f1, animationDuration)));
 			// swap bars
 			Rectangle2D t = bars[i0];
 			bars[i0] = bars[i1];
@@ -183,7 +184,7 @@ public class SortPanel extends JComponent {
 	public void setAnimationFramesDuration(int newdur){
 		animationTimer.stop();
 		abortAnimation();
-		animation_duration = Math.max(min_animation_duration, newdur);
+		animationDuration = Math.max(min_animation_duration, newdur);
 		animationTimer.start();
 	}
 	/**
@@ -191,18 +192,18 @@ public class SortPanel extends JComponent {
 	 * @return current FPA
 	 */
 	public int getAnimationDuration(){ 
-		return animation_duration;
+		return animationDuration;
 	}
 	/**
 	 * Update bars position using animation
 	 * @return true if animations were updated and false if no animation existed
 	 */
-	public boolean updateAnimation() {
+	protected boolean updateAnimation() {
 		if (!hasAnimation()) {
 			return false;
 		}
 		
-		for (IndexAnime a : animations) {
+		for (IndexAndAnimation a : animations) {
 			a.anime.update();
 			Point2D left_top = a.anime.getCurrentPoint();
 			bars[a.ind].setRect(left_top.getX(), left_top.getY(),
@@ -229,7 +230,6 @@ public class SortPanel extends JComponent {
 			public void componentResized(ComponentEvent e) {
 				super.componentResized(e);
 				abortAnimation();
-				oldSize = getSize();
 				repaint();
 			}
 		});

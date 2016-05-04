@@ -228,9 +228,10 @@ public class QuickSortRandomPivot implements ISortingAlgortihm {
 			cs[j].val = a[j];
 			cs[b].val = a[b];
 			b++;
-		} else {
-			cs[j].state = CellState.Active;
-		}
+		} 
+//		else {
+//			cs[j].state = CellState.Active;
+//		}
 		
 		++j;
 		if (j == subarray.r) {

@@ -14,7 +14,7 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.Timer;
 
-import ua.plukraine.algos.AlgoClassLoader;
+import ua.plukraine.algos.AlgorithmClassLoader;
 import ua.plukraine.algos.ISortingAlgortihm;
 import ua.plukraine.algos.InsertionSorting;
 import ua.plukraine.algos.QuickSortRandomPivot;
@@ -22,24 +22,17 @@ import ua.plukraine.gui.SortPanel;
 
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.IntStream;
-import java.awt.event.ActionEvent;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 
@@ -57,21 +50,10 @@ public class MainFrame {
 	private enum MouseState {
 		Normal, DeletePanel
 	}
-	/**
-	 * Sort panel with it's position in grid
-	 */
-	private class PanelWithPosition {
-		public int r, c;
-		public SortPanel p;
-		public PanelWithPosition(int row, int column, SortPanel panel) {
-			r = row; c = column;
-			p = panel;
-		}
-	}
 
 	private JFileChooser fileChooser;
 	private JFrame frame;
-	private List<PanelWithPosition> sort_panels = new ArrayList<>(MAX_PANELS);
+	private List<SortPanel> sort_panels = new ArrayList<>(MAX_PANELS);
 	private JSlider slider;
 	private JButton start_stop_btn;
 	private Timer tactTimer;
@@ -95,6 +77,7 @@ public class MainFrame {
 	private JMenuItem loadAlgosMenu;
 	private JMenuItem resetArrMenu;
 	private JCheckBoxMenuItem toggleRemovePanelMenu;
+	private JMenuItem resetPanelMenu;
 
 	/**
 	 * Launch the application.
@@ -195,6 +178,12 @@ public class MainFrame {
 		});
 		algoMenu.add(resetArrMenu);
 		
+		resetPanelMenu = new JMenuItem("Reset panel");
+		resetPanelMenu.addActionListener((e) -> {
+			resetPanels();
+		});
+		algoMenu.add(resetPanelMenu);
+		
 		separPanelAndLoad = new JSeparator();
 		algoMenu.add(separPanelAndLoad);
 		
@@ -211,7 +200,7 @@ public class MainFrame {
 	public void stopSorting() {
 		//Arrays.stream(sort_panels).forEach((p) -> p.abortAnimation());
 		btn_must_start = true; // !!!
-		sort_panels.stream().forEach((p) -> p.p.abortAnimation());
+		sort_panels.stream().forEach((p) -> p.abortAnimation());
 		tactTimer.stop();
 	}
 	
@@ -221,7 +210,7 @@ public class MainFrame {
 	public void startSorting() {
 		//Arrays.stream(sort_panels).forEach((p) -> p.abortAnimation());
 		btn_must_start = false; // !!!
-		sort_panels.stream().forEach((p) -> p.p.abortAnimation());
+		sort_panels.stream().forEach((p) -> p.abortAnimation());
 		tactTimer.start();
 	}
 	
@@ -248,6 +237,7 @@ public class MainFrame {
 				System.exit(1);
 			}
 		}
+		// Add numbers to the names of algorithms
 		Object[] choises = IntStream.range(0, instances.size())
 			.mapToObj((i) -> i + ". " + instances.get(i).getName()).toArray();
 		String o = JOptionPane.showInputDialog(frame, "Choose algorithm", "Algorithm required", JOptionPane.QUESTION_MESSAGE,
@@ -255,6 +245,7 @@ public class MainFrame {
 		if (o == null) {
 			return;
 		}
+		// Use numbers on beginning to determine the algorithm
 		ISortingAlgortihm chosen = instances.get(Integer.parseInt(o.substring(0, o.indexOf('.'))));
 		
 		
@@ -262,8 +253,6 @@ public class MainFrame {
 		int col = (sort_panels.size()) / sqRoot;
 		int row = (sort_panels.size()) % sqRoot;
 		SortPanel panel = new SortPanel(chosen);
-		
-		PanelWithPosition pwp = new PanelWithPosition(row, col, panel);
 		panel.addMouseListener(new SortPanelMouseHandler());
 		
 		GridBagConstraints c = new GridBagConstraints();
@@ -273,7 +262,7 @@ public class MainFrame {
 		c.insets = new Insets(2, 2, 2, 2);
 		sortPanelsCont.add(panel, c);
 		
-		sort_panels.add(pwp);
+		sort_panels.add(panel);
 		
 		panel.feedArray(cur_array);
 		frame.getContentPane().validate();
@@ -318,8 +307,8 @@ public class MainFrame {
 		
 		int newval = (int)(slider.getValue() * (1 - 3./4) / SortPanel.timer_tick);
 		tactTimer.setDelay(slider.getValue());
-		for (PanelWithPosition p : sort_panels) {
-			p.p.setAnimationFramesDuration(newval);
+		for (SortPanel p : sort_panels) {
+			p.setAnimationFramesDuration(newval);
 		}
 		if (!btn_must_start)
 			tactTimer.start();
@@ -341,9 +330,9 @@ public class MainFrame {
 	 */
 	protected void updateSortingPanels() {
 		boolean allFinished = true;
-		for (PanelWithPosition p : sort_panels) {
-			p.p.update();
-			allFinished &= p.p.hasFinished();
+		for (SortPanel p : sort_panels) {
+			p.update();
+			allFinished &= p.hasFinished();
 		}
 		if (allFinished) {
 			tactTimer.stop();
@@ -375,22 +364,20 @@ public class MainFrame {
 	protected void removePanel(Component panelToRemove) {
 		stopSorting();
 		if (panelToRemove instanceof SortPanel) {
-			sort_panels.removeIf((p) -> p.p.equals(panelToRemove));
+			sort_panels.removeIf((p) -> p.equals(panelToRemove));
+			// reorder panels
 			int sq = (int)Math.sqrt(MAX_PANELS);
-			for (int i=0; i<sort_panels.size(); ++i) {
-				PanelWithPosition p = sort_panels.get(i);
-				p.r = i%sq;
-				p.c = i/sq;
-			}
 			sortPanelsCont.removeAll();
-			for (PanelWithPosition p : sort_panels) {
+			for (int i=0; i<sort_panels.size(); ++i) {
+				SortPanel p = sort_panels.get(i);
 				GridBagConstraints c = new GridBagConstraints();
 				c.weightx = c.weighty = 1.0;
 				c.fill = GridBagConstraints.BOTH;
-				c.gridx = p.r; c.gridy = p.c;
 				c.insets = new Insets(2, 2, 2, 2);
-				sortPanelsCont.add(p.p, c);
+				c.gridx = i%sq; c.gridy = i/sq;
+				sortPanelsCont.add(p, c);
 			}
+			// repaint component
 			frame.getContentPane().revalidate();
 			frame.repaint();
 		}
@@ -446,8 +433,8 @@ public class MainFrame {
 	 * Reset sort panels to initial state
 	 */
 	protected void resetPanels() {
-		for (PanelWithPosition p : sort_panels) {
-			p.p.feedArray(cur_array);
+		for (SortPanel p : sort_panels) {
+			p.feedArray(cur_array);
 		}
 	}
 	
@@ -459,10 +446,13 @@ public class MainFrame {
 		if (dialogRes == JFileChooser.APPROVE_OPTION) {
 			try {
 				File folder = fileChooser.getSelectedFile();
-				List<Class> classes = new AlgoClassLoader().loadFromFolder(folder);
+				List<Class> classes = null;
+				if (folder.exists() && folder.isDirectory()) {
+					classes = new AlgorithmClassLoader().loadFromFolder(folder);
+				}
 				String mes = "Not loaded";
 				// form list of loaded classes
-				if (!classes.isEmpty()) {
+				if (classes != null && !classes.isEmpty()) {
 					StringBuilder listOfClasses = new StringBuilder();
 					for (Class c : classes) {
 						listOfClasses.append(c.getName());
