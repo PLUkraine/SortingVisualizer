@@ -19,6 +19,7 @@ import ua.plukraine.algos.ISortingAlgortihm;
 import ua.plukraine.algos.InsertionSorting;
 import ua.plukraine.algos.QuickSortRandomPivot;
 import ua.plukraine.gui.SortPanel;
+import ua.plukraine.utils.UserDialogHelper;
 
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -51,7 +52,7 @@ public class MainFrame {
 		Normal, DeletePanel
 	}
 
-	private JFileChooser fileChooser;
+	private UserDialogHelper dialogHelper = new UserDialogHelper();
 	private JFrame frame;
 	private List<SortPanel> sort_panels = new ArrayList<>(MAX_PANELS);
 	private JSlider slider;
@@ -59,7 +60,6 @@ public class MainFrame {
 	private Timer tactTimer;
 	/** Array for sorting */
 	private int[] cur_array = new int[] {13, 2, 16, 6, 7, 14, 3, 17, 20, 18, 2, 13, 6, 7, 3, 4, 6, 10, 20, 4};
-	private Set<Class> algo_list = new HashSet<Class>();
 	
 	/** Initial timer tick period */
 	private static final int LONG_DELAY = 500;
@@ -108,13 +108,6 @@ public class MainFrame {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
-		// TODO remove
-		algo_list.add(InsertionSorting.class);
-		algo_list.add(QuickSortRandomPivot.class);
-		
-		fileChooser = new JFileChooser();
-		fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		
 		tactTimer = new Timer(LONG_DELAY, (e) -> {
 			updateSortingPanels();
 		});
@@ -217,7 +210,6 @@ public class MainFrame {
 	/**
 	 * Prompt user to choose algorithm and create panel to represent that algorithm
 	 */
-	@SuppressWarnings({"rawtypes"})
 	protected void onAddPanel() {
 		stopSorting();
 		if (sort_panels.size() >= MAX_PANELS) {
@@ -225,40 +217,17 @@ public class MainFrame {
 			return;
 		}
 		
-		// TODO put in separate function
-		List<ISortingAlgortihm> instances = new ArrayList<>();
-		for (Class a : algo_list) {
-			try {
-				ISortingAlgortihm algo = (ISortingAlgortihm)a.newInstance();
-				instances.add(algo);
-			} catch ( IllegalAccessException 
-					| InstantiationException ex) {
-				ex.printStackTrace();
-				System.exit(1);
-			}
-		}
-		// Add numbers to the names of algorithms
-		Object[] choises = IntStream.range(0, instances.size())
-			.mapToObj((i) -> i + ". " + instances.get(i).getName()).toArray();
-		String o = JOptionPane.showInputDialog(frame, "Choose algorithm", "Algorithm required", JOptionPane.QUESTION_MESSAGE,
-				null, choises, choises[0]).toString();
-		if (o == null) {
-			return;
-		}
-		// Use numbers on beginning to determine the algorithm
-		ISortingAlgortihm chosen = instances.get(Integer.parseInt(o.substring(0, o.indexOf('.'))));
-		
+		ISortingAlgortihm chosen = dialogHelper.pickAlgorithm(frame);
 		
 		int sqRoot = (int)Math.sqrt(MAX_PANELS);
-		int col = (sort_panels.size()) / sqRoot;
-		int row = (sort_panels.size()) % sqRoot;
 		SortPanel panel = new SortPanel(chosen);
 		panel.addMouseListener(new SortPanelMouseHandler());
 		
 		GridBagConstraints c = new GridBagConstraints();
 		c.weightx = c.weighty = 1.0;
 		c.fill = GridBagConstraints.BOTH;
-		c.gridx = row; c.gridy = col;
+		c.gridx = (sort_panels.size()) / sqRoot; 
+		c.gridy = (sort_panels.size()) % sqRoot;
 		c.insets = new Insets(2, 2, 2, 2);
 		sortPanelsCont.add(panel, c);
 		
@@ -387,46 +356,11 @@ public class MainFrame {
 	 * Change array for sorting
 	 */
 	protected void resetArray() {
-		String str_arr = (String)JOptionPane.showInputDialog(
-                frame,
-                "Enter array of positive ints",
-                "Enter array",
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                null,
-                "1,2,3");
-		if (str_arr == null) {
-			return;
+		int[] arr = dialogHelper.getArray(frame, MAX_ARR_LEN);
+		if (arr != null) {
+			cur_array = arr;
+			resetPanels();
 		}
-		String[] tokens = str_arr.split(",");
-		
-		if (tokens.length == 0) {
-			String mes = "Array is empty";
-			JOptionPane.showMessageDialog(frame, mes);
-			return;
-		}
-		
-		if (tokens.length > MAX_ARR_LEN) {
-			String mes = String.format("Array must be less than %d elements long", MAX_ARR_LEN);
-			JOptionPane.showMessageDialog(frame, mes);
-			return;
-		}
-		
-		int[] arr = new int[tokens.length];
-		for (int i=0; i<tokens.length; ++i) {
-			try {
-				arr[i] = Integer.parseUnsignedInt(tokens[i].trim());
-				if (arr[i] == 0)
-					throw new NumberFormatException("Number isn't positive");
-			} catch (NumberFormatException ex) {
-				String mes = String.format("Element #%d, \"%s\" namely, isn't positive integer", i+1, tokens[i]);
-				JOptionPane.showMessageDialog(frame, mes);
-				return;
-			}
-		}
-		
-		cur_array = arr;
-		resetPanels();
 	}
 	
 	/**
@@ -442,31 +376,6 @@ public class MainFrame {
 	 * Show dialog and load classes from chosen folder
 	 */
 	protected void loadClasses() {
-		int dialogRes = fileChooser.showOpenDialog(frame);
-		if (dialogRes == JFileChooser.APPROVE_OPTION) {
-			try {
-				File folder = fileChooser.getSelectedFile();
-				List<Class> classes = null;
-				if (folder.exists() && folder.isDirectory()) {
-					classes = new AlgorithmClassLoader().loadFromFolder(folder);
-				}
-				String mes = "Not loaded";
-				// form list of loaded classes
-				if (classes != null && !classes.isEmpty()) {
-					StringBuilder listOfClasses = new StringBuilder();
-					for (Class c : classes) {
-						listOfClasses.append(c.getName());
-						listOfClasses.append(", ");
-					}
-					mes = "Loaded " + listOfClasses.substring(0, listOfClasses.length()-2);
-				}
-				// show if loaded something
-				JOptionPane.showMessageDialog(frame, mes);
-				
-				algo_list.addAll(classes);
-			} catch (IOException ex) {
-				JOptionPane.showMessageDialog(frame, ex.getMessage());
-			}
-		}
+		dialogHelper.loadAlgorithms(frame);
 	}
 }

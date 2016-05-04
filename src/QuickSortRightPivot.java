@@ -1,30 +1,13 @@
-package ua.plukraine.algos;
-
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
-import java.util.Random;
 
+import ua.plukraine.algos.ISortingAlgortihm;
 import ua.plukraine.utils.Cell;
 import ua.plukraine.utils.CellState;
 
-/**
- * Stateful iterative quick sort algorithm with random pivot choosing
- *
- */
-public class QuickSortRandomPivot implements ISortingAlgortihm {
-	/**
-	 * Swap elements in given array
-	 * @param arr - given array
-	 * @param a - index of the first value
-	 * @param b - index of the second value
-	 */
-	protected void swap(int[]arr, int a, int b) {
-		int tmp = arr[a];
-		arr[a] = arr[b];
-		arr[b] = tmp;
-	}
-
+public class QuickSortRightPivot implements ISortingAlgortihm {
+	
 	protected class pair {
 		int l; int r;
 		/**
@@ -85,6 +68,7 @@ public class QuickSortRandomPivot implements ISortingAlgortihm {
 		return res;
 	}
 	
+	
 	/**
 	 * Pop subarray from stack and start sorting
 	 * @return new state
@@ -107,10 +91,7 @@ public class QuickSortRandomPivot implements ISortingAlgortihm {
 		} while (!subarray.mustSort());
 		
 		// choose pivot and put index pointer to the left
-		int n = subarray.r - subarray.l + 1;
-		Random rand = new Random();
-		int pEl = rand.nextInt(n)+subarray.l;
-		swap(a, pEl, subarray.r);
+		int pEl = subarray.r;
 		b = j = subarray.l;
 		state = InnerState.Partitioning;
 		Cell[] cs = new Cell[a.length];
@@ -188,9 +169,6 @@ public class QuickSortRandomPivot implements ISortingAlgortihm {
 			cs[b].val = a[b];
 			b++;
 		} 
-//		else {
-//			cs[j].state = CellState.Active;
-//		}
 		
 		++j;
 		if (j == subarray.r) {
@@ -198,6 +176,17 @@ public class QuickSortRandomPivot implements ISortingAlgortihm {
 		}
 		
 		return cs;
+	}
+	/**
+	 * Swap elements in given array
+	 * @param arr - given array
+	 * @param a - index of the first value
+	 * @param b - index of the second value
+	 */
+	protected void swap(int[]arr, int a, int b) {
+		int tmp = arr[a];
+		arr[a] = arr[b];
+		arr[b] = tmp;
 	}
 
 	@Override
@@ -218,5 +207,4 @@ public class QuickSortRandomPivot implements ISortingAlgortihm {
 	public String getName() {
 		return "Quick Sort, random pivot";
 	}
-
 }
