@@ -17,6 +17,7 @@ import ua.plukraine.algos.ISortingAlgortihm;
 import ua.plukraine.algos.InsertionSorting;
 import ua.plukraine.algos.QuickSortRandomPivot;
 
+@SuppressWarnings("rawtypes")
 public class UserDialogHelper {
 	private JFileChooser fileChooser;
 	private Set<Class> algo_list = new HashSet<Class>();
@@ -27,7 +28,11 @@ public class UserDialogHelper {
 		algo_list.add(InsertionSorting.class);
 		algo_list.add(QuickSortRandomPivot.class);
 	}
-	
+	/**
+	 * Pick algorithm from existing list
+	 * @param parent parent frame
+	 * @return picked algorithm or null if no algorithm was picked
+	 */
 	public ISortingAlgortihm pickAlgorithm(JFrame parent) {
 		List<ISortingAlgortihm> instances = new ArrayList<>();
 		for (Class a : algo_list) {
@@ -104,7 +109,6 @@ public class UserDialogHelper {
 	 * @param parent parent frame
 	 * @return list of loaded classes (if any) or null if user refuse to choose folder
 	 */
-	@SuppressWarnings("rawtypes")
 	public void loadAlgorithms(JFrame parent) {
 		int dialogRes = fileChooser.showOpenDialog(parent);
 		if (dialogRes == JFileChooser.APPROVE_OPTION) {

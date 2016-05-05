@@ -45,7 +45,7 @@ public class SortPanel extends JComponent {
 	/* Constants */
 	public static final int timer_tick = 5;
 	protected static final double padding = 20;
-	protected static final double gap = 3;
+	protected static final double gap = 1;
 	protected static final int min_animation_duration = 10;
 	
 	

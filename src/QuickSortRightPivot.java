@@ -205,6 +205,6 @@ public class QuickSortRightPivot implements ISortingAlgortihm {
 
 	@Override
 	public String getName() {
-		return "Quick Sort, random pivot";
+		return "Quick Sort, right pivot";
 	}
 }
