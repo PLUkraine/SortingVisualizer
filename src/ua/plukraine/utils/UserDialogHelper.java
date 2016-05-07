@@ -48,11 +48,12 @@ public class UserDialogHelper {
 		// Add numbers to the names of algorithms
 		Object[] choises = IntStream.range(0, instances.size())
 			.mapToObj((i) -> i + ". " + instances.get(i).getName()).toArray();
-		String o = JOptionPane.showInputDialog(parent, "Choose algorithm", "Algorithm required", JOptionPane.QUESTION_MESSAGE,
-				null, choises, choises[0]).toString();
-		if (o == null) {
+		Object choise = JOptionPane.showInputDialog(parent, "Choose algorithm", "Algorithm required", JOptionPane.QUESTION_MESSAGE,
+				null, choises, choises[0]);
+		if (choise == null) {
 			return null;
 		}
+		String o = choise.toString();
 		// Use numbers on beginning to determine the algorithm
 		return instances.get(Integer.parseInt(o.substring(0, o.indexOf('.'))));
 	}

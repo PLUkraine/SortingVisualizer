@@ -202,6 +202,7 @@ public class MainFrame {
 		}
 		
 		ISortingAlgortihm chosen = dialogHelper.pickAlgorithm(frame);
+		if (chosen == null) return;
 		block.addPanel(chosen, slider.getValue());
 		resetPanels();
 	}

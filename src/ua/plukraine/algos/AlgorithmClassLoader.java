@@ -11,16 +11,6 @@ import java.util.List;
 
 @SuppressWarnings("rawtypes")
 public class AlgorithmClassLoader {
-
-	public static void main(String[] args) throws Exception {
-		String path = "/home/plukraine/programming/eclipse/workspace/SortingVisualizer/bin";
-		AlgorithmClassLoader loader = new AlgorithmClassLoader();
-		List<Class> list = loader.loadFromFolder(new File(path));
-		for (Class c : list ){
-			System.out.println(c.getName());
-		}
-	}
-	
 	/**
 	 * Load all non-abstract subclasses of ISortingAlgorithm type from folder (not recursively). Classes shouldn't be in a packages.
 	 * @param directory - folder to load classes from
