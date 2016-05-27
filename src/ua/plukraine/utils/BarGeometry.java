@@ -38,7 +38,8 @@ public class BarGeometry {
 	 * @param gap - gap between bars
 	 * @return array of generated bars
 	 */
-	public static Rectangle2D[] generateBars(Cell[] arrState, double w_width, double w_height, double padding, double gap) {
+	public static Rectangle2D[] generateBars(Cell[] arrState, double w_width,
+			double w_height, double padding, double gap) {
 		int n = arrState.length;
 		int max_val = Arrays.stream(arrState).max(new CellComparator()).get().val;
 		Rectangle2D[] bars = new Rectangle2D[n];
@@ -62,7 +63,8 @@ public class BarGeometry {
 	 * @param ind - index of bar
 	 * @return triangle below bar
 	 */
-	public static Path2D generateTriangle(Cell[] arrState, double w_width, double w_height, double padding, double gap, int ind) {
+	public static Path2D generateTriangle(Cell[] arrState, double w_width,
+			double w_height, double padding, double gap, int ind) {
 		Path2D triangle = new Path2D.Double();
 		
 		double b_width = getBarWidth(w_width, padding, gap, arrState.length);
