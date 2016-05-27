@@ -18,7 +18,7 @@ public class TestSortingAlgorithms {
 	 * @param algorithm - algorithm to test
 	 * @param low - minimum array length (inclusive)
 	 * @param high - maximum array length (exclusive)
-	 * @param cases - number of arrays
+	 * @param cases - number of arrays to generate
 	 */
 	private void testAlgorithm(ISortingAlgortihm algorithm, int low, int high, int cases) {
 		long rgenseed = System.currentTimeMillis();

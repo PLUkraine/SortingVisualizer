@@ -67,8 +67,8 @@ public class UserDialogHelper {
 	public int[] getArray(JFrame parent, int MAX_ARR_LEN) {
 		String str_arr = (String)JOptionPane.showInputDialog(
 				parent,
-                "Enter array of positive ints",
-                "Enter array",
+                "Enter an array of positive ints",
+                "Enter an array",
                 JOptionPane.QUESTION_MESSAGE,
                 null,
                 null,
@@ -108,7 +108,7 @@ public class UserDialogHelper {
 	/**
 	 * Pick directory and load algorithms
 	 * @param parent parent frame
-	 * @return list of loaded classes (if any) or null if user refuse to choose folder
+	 * @return list of loaded classes (if any) or null if user refuses to choose folder
 	 */
 	public void loadAlgorithms(JFrame parent) {
 		int dialogRes = fileChooser.showOpenDialog(parent);

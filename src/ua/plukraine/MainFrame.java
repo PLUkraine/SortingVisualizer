@@ -303,6 +303,7 @@ public class MainFrame {
 		@Override
 		public void mouseEntered(MouseEvent e) {
 			super.mouseEntered(e);
+			// create a border if mouse hovers over panel and state is DELETE
 			if (mouseState == MouseState.DeletePanel && e.getComponent() instanceof SortPanel) {
 				SortPanel p = (SortPanel)e.getComponent();
 				p.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
@@ -311,6 +312,7 @@ public class MainFrame {
 		@Override
 		public void mouseExited(MouseEvent e) {
 			super.mouseExited(e);
+			// destroy border if mouse gets out of panel
 			if (mouseState == MouseState.DeletePanel && e.getComponent() instanceof SortPanel) {
 				SortPanel p = (SortPanel)e.getComponent();
 				p.setBorder(BorderFactory.createEmptyBorder());
