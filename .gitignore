@@ -1,2 +1,5 @@
 bin/
 BAK/
+.settings
+.classpath
+.project

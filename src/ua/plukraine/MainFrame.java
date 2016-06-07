@@ -9,8 +9,10 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.border.EmptyBorder;
 
 import ua.plukraine.algos.ISortingAlgortihm;
+import ua.plukraine.algos.InsertionSorting;
 import ua.plukraine.gui.SortPanel;
 import ua.plukraine.utils.UserDialogHelper;
 
@@ -80,6 +82,10 @@ public class MainFrame {
 	 */
 	public MainFrame() {
 		initialize();
+		
+		// add one algorithm for demonstration
+		block.addPanel(new InsertionSorting(), slider.getValue());
+		resetPanels();
 	}
 
 	/**
@@ -106,7 +112,9 @@ public class MainFrame {
 		// Create lower panel with slider and button
 		JPanel utilsPanel = new JPanel();
 		frame.getContentPane().add(utilsPanel, BorderLayout.SOUTH);
-		utilsPanel.setLayout(new GridLayout(2, 2, 0, 3));
+		// sets padding to 10
+		utilsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+		utilsPanel.setLayout(new GridLayout(2, 2, 3, 3));
 		
 		slider = new JSlider(230, 2000, initDelay);
 		slider.addChangeListener((e) -> {
@@ -261,7 +269,7 @@ public class MainFrame {
 	 */
 	protected void resetArray() {
 		stopSorting();
-		int[] arr = dialogHelper.getArray(frame, SortBlock.MAX_ARR_LEN);
+		int[] arr = dialogHelper.getArray(frame, SortBlock.MAX_ARR_LEN, block.getArrayCopy());
 		if (arr != null) {
 			block.resetArray(arr);
 		}

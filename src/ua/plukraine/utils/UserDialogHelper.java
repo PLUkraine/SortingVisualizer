@@ -62,9 +62,10 @@ public class UserDialogHelper {
 	 * Get array from dialog
 	 * @param parent parent frame
 	 * @param MAX_ARR_LEN max array lenght
+	 * @param prevArr previous array (will be displayed in a dialog)
 	 * @return parsed array or null if error happened
 	 */
-	public int[] getArray(JFrame parent, int MAX_ARR_LEN) {
+	public int[] getArray(JFrame parent, int MAX_ARR_LEN, int[] prevArr) {
 		String str_arr = (String)JOptionPane.showInputDialog(
 				parent,
                 "Enter an array of positive ints",
@@ -72,7 +73,7 @@ public class UserDialogHelper {
                 JOptionPane.QUESTION_MESSAGE,
                 null,
                 null,
-                "1,2,3");
+                arrayToString(prevArr));
 		if (str_arr == null) {
 			return null;
 		}
@@ -103,6 +104,36 @@ public class UserDialogHelper {
 			}
 		}
 		return arr;
+	}
+	
+	/**
+	 * Convert array to string. Goes like this: 1,2,3
+	 * @param arr - array to convert
+	 * @return converted array
+	 */
+	protected static String arrayToString(int[] arr) {
+		StringBuilder strArr = new StringBuilder();
+		if (arr == null) return strArr.toString();
+		for (int i=0; i<arr.length; ++i) {
+			if (i == 0)
+				strArr.append(arr[i]);
+			else {
+				strArr.append(", ");
+				strArr.append(arr[i]);
+			}
+		}
+		return strArr.toString();
+	}
+	
+	/**
+	 * Get array from dialog
+	 * @param parent parent frame
+	 * @param MAX_ARR_LEN max array lenght
+	 * @return parsed array or null if error happened
+	 */
+	public int[] getArray(JFrame parent, int MAX_ARR_LEN) {
+		int[] sampleArr = new int[]{ 1,2,3 };
+		return getArray(parent, MAX_ARR_LEN, sampleArr);
 	}
 	
 	/**

@@ -5,6 +5,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.JPanel;
@@ -132,6 +133,13 @@ public class SortBlock extends JPanel {
 	}
 	public int panelsCount() {
 		return sort_panels.size();
+	}
+	/**
+	 * Get copy of current array
+	 * @return copy of the array
+	 */
+	public int[] getArrayCopy() {
+		return Arrays.copyOf(cur_array, cur_array.length);
 	}
 	
 	protected int calculateAnimationDuration(int updateTime) {
