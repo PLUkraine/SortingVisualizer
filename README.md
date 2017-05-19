@@ -1,8 +1,15 @@
-# SortingVisualizer
-Sorting algorithms visualizer. Can sort up to 4 algorithms simultaneously. You can create you own algorithms as well.
+# SeeHowItSortsItself
+This project is an attempt to visualize how sorting algorithms work.
+
+You can put up to 4 algorithms in a window and start sorting the same array simultaneously.
+
+This project can visualize any algorithm that uses swap operation. You can write new sorting algorithm and add it to the program without recompile - just load it after the program starts!
 ## Build
-To build this project, you need Java 8 compiler. Just compile every file in src folder. To run unit tests, use JUnit 4 library. 
+Be sure to use Java 8 compiler. Obviously, you use IDE if you want.
+
+Tests use JUnit 4 library. You don't need to add it if you only want to use this application!
 ## Run
-To run this application, run ua.plukraine.MainFrame class.
-Have fun!
+Main class is *ua.plukraine.MainFrame* class.
+
+Have fun with using this project!
 
